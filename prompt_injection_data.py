@@ -216,6 +216,9 @@ class TrainingArtifacts:
     accuracy: float
     report: str
     label_counts: dict[str, int]
+    # added 
+    X_test: pd.Series
+    y_test: pd.Series
 
 
 def _pick_first_column(frame: pd.DataFrame, candidates: Iterable[str]) -> str | None:
@@ -514,15 +517,23 @@ def train_prompt_injection_model(
         accuracy=accuracy_score(y_test, predictions),
         report=classification_report(y_test, predictions),
         label_counts=dataset["label"].value_counts().to_dict(),
+        #added
+        X_test=X_test,
+        y_test=y_test,
     )
 
-
+#edited for python
 def predict_with_threshold(model: Pipeline, prompt: str, threshold: float = 0.5) -> tuple[str, dict[str, float]]:
     probabilities = model.predict_proba([prompt])[0]
+
     scores = {
-        label: float(score) for label, score in zip(model.classes_, probabilities, strict=True)
+        label: float(score)
+        for label, score in zip(model.classes_, probabilities)
     }
+
     malicious_score = scores.get("malicious", 0.0)
+
     if malicious_score >= threshold:
         return "malicious", scores
+
     return "safe", scores
